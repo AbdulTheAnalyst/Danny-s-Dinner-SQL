@@ -22,3 +22,6 @@ This repository contains three key datasets provided by Danny for the case study
 ## 3. Members Dataset
 
 - **Description**: The final members table captures the join_date when a customer_id joined the beta version of the Danny’s Diner loyalty program.
+
+## Entity Relationship Diagram
+![Sales Dataset](https://github.com/your-username/your-repository/raw/main/images/sales.png)
