@@ -105,3 +105,31 @@ ORDER BY
 LIMIT 
   1;
 ```
+5. **Which item was the most popular for each customer?**
+```sql
+WITH customer_cte AS (
+  SELECT
+    sales.customer_id,
+    menu.product_name,
+    COUNT(sales.customer_id) AS item_quantity,
+    RANK() OVER (
+      PARTITION BY sales.customer_id
+      ORDER BY COUNT(sales.customer_id) DESC
+    ) AS item_rank
+  FROM
+    dannys_diner.sales
+    INNER JOIN dannys_diner.menu ON menu.product_id = sales.product_id
+  GROUP BY
+    sales.customer_id, menu.product_name
+)
+SELECT
+  customer_id,
+  product_name,
+  item_quantity
+FROM
+  customer_cte
+WHERE
+  item_rank = 1;
+```
+   
+
