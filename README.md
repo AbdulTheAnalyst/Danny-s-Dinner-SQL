@@ -156,3 +156,66 @@ SELECT DISTINCT
 FROM member_first_purchase
 WHERE purchase_rank = 1;
 ```
+7.*Which item was purchased just before the customer became a member?*
+ ```sql
+   WITH member_first_purchase AS (
+  SELECT
+    s.customer_id,
+    s.order_date,
+    m.product_name,
+    RANK() OVER (
+      PARTITION BY s.customer_id
+      ORDER BY s.order_date DESC
+    ) AS purchase_rank
+  FROM dannys_diner.sales AS s
+  INNER JOIN dannys_diner.menu AS m ON s.product_id = m.product_id
+  LEFT JOIN dannys_diner.members AS mem ON s.customer_id = mem.customer_id
+  WHERE
+    s.order_date < mem.join_date::DATE
+)
+SELECT DISTINCT
+  customer_id,
+  order_date,
+  product_name AS first_purchased_item
+FROM member_first_purchase
+WHERE purchase_rank = 1;
+```
+9. **If each $1 spent equates to 10 points and sushi has a 2x points multiplier - how many points would each customer have?**
+```sql
+SELECT
+  sales.customer_id,
+  SUM (
+    CASE
+      WHEN menu.product_name = 'sushi' THEN 2 * 10 * menu.price
+      ELSE 10 * menu.price
+    END
+  ) AS points
+FROM
+  dannys_diner.sales
+LEFT JOIN dannys_diner.menu ON sales.product_id = menu.product_id
+GROUP BY sales.customer_id
+ORDER BY points DESC;
+
+10. **In the first week after a customer joins the program (including their join date), they earn 2x points on all items, not just sushi - how many points do customer A and B have at the end of January?**
+```sql
+SELECT
+  sales.customer_id,
+  SUM(
+    CASE
+      WHEN menu.product_name != 'sushi' THEN 2 * 10 * menu.price
+      WHEN sales.order_date BETWEEN  (members.join_date :: DATE + 6)
+      AND members.join_date :: DATE THEN 10 * menu.price
+      ELSE NULL
+    END
+  ) AS points
+FROM
+  dannys_diner.sales
+  INNER JOIN dannys_diner.menu ON sales.product_id = menu.product_id
+  INNER JOIN dannys_diner.members ON sales.customer_id = members.customer_id
+WHERE
+  sales.order_date <= '2021-01-31' :: DATE
+GROUP BY
+  sales.customer_id
+ORDER BY
+  points;
+```
