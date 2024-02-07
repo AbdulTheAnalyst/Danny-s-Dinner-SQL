@@ -131,5 +131,28 @@ FROM
 WHERE
   item_rank = 1;
 ```
-   
 
+6. **Which item was purchased first by the customer after they became a member?**
+```sql
+WITH member_first_purchase AS (
+  SELECT
+    s.customer_id,
+    s.order_date,
+    m.product_name,
+    RANK() OVER (
+      PARTITION BY s.customer_id
+      ORDER BY s.order_date
+    ) AS purchase_rank
+  FROM dannys_diner.sales AS s
+  INNER JOIN dannys_diner.menu AS m ON s.product_id = m.product_id
+  INNER JOIN dannys_diner.members AS mem ON s.customer_id = mem.customer_id
+  WHERE
+    s.order_date >= mem.join_date::DATE
+)
+SELECT DISTINCT
+  customer_id,
+  order_date,
+  product_name AS first_purchased_item
+FROM member_first_purchase
+WHERE purchase_rank = 1;
+```
